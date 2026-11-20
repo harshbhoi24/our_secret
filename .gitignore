@@ -29,3 +29,4 @@ uploads/stego/*
 !uploads/stego/.gitkeep
 our_secret.db
 test_stego.png
+~$*

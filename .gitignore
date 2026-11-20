@@ -38,3 +38,5 @@ capture_documentation_screenshots.py
 capture_testuser_screenshots.py
 docs_screenshots/
 test_screen.png
+*.pdf
+Our_Secret_Project_Complete_Guide_Hindi.html

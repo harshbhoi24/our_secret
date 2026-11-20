@@ -34,3 +34,6 @@ test_stego.png
 presentation_slides.html
 generate_elite_presentation.py
 generate_presentation.py
+capture_documentation_screenshots.py
+docs_screenshots/
+test_screen.png

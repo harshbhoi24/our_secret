@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}Security Activity Monitor – Admin Console{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-3">
+    <!-- Header Banner -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-4 rounded-3" style="background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <div class="stat-icon purple" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                    <i class="bi bi-shield-shaded"></i>
+                </div>
+                <h3 class="text-white fw-bold mb-0">Security Activity Monitor</h3>
+                <span class="badge badge-cyber admin">SOC AUDIT CONSOLE</span>
+            </div>
+            <p class="text-secondary small mb-0">
+                Real-time forensic monitoring for user logins, steganographic encoding/decoding, cryptographic integrity events, and suspicious upload rejections.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-cyber-secondary">
+                <i class="bi bi-sliders me-1"></i> Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Mandatory Privacy Notice -->
+    <div class="p-2 px-3 rounded mb-3 small text-secondary d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+        <i class="bi bi-shield-check text-success fs-5"></i>
+        <span>
+            <strong>Zero-Knowledge Privacy Enforcement:</strong> System logs record only forensic audit metadata (timestamps, operator IDs, event statuses, and checksums). Secret messages, passwords, encryption keys, and plaintext are strictly excluded from logging.
+        </span>
+    </div>
+
+    <!-- Defensive Inspection & Antivirus Disclaimer -->
+    <div class="p-2 px-3 rounded mb-4 small text-secondary d-flex align-items-center justify-content-between flex-wrap gap-2" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.3);">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-lock-fill text-info fs-5"></i>
+            <span>
+                <strong>Defensive File Inspection:</strong> Magic signature checks, format integrity, and decompression bomb defenses are active on all upload vectors. <em>(Basic file validation is not a complete antivirus engine).</em>
+            </span>
+        </div>
+        <span class="badge {{ 'bg-success' if clamav_available else 'bg-secondary' }} font-monospace" style="font-size: 0.72rem;">
+            <i class="bi bi-shield-check me-1"></i> {{ clamav_status }}
+        </span>
+    </div>
+
+    <!-- Critical Duress Warning Banner -->
+    {% if monitor_stats.duress_alarms > 0 %}
+    <div class="alert alert-danger p-3 mb-4 d-flex align-items-center gap-3 border-danger shadow-lg" style="background: rgba(220, 38, 38, 0.15); border-left: 5px solid #ef4444;">
+        <div class="fs-2 text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div>
+            <div class="fw-bold text-danger fs-5">🚨 CRITICAL DURESS / COERCION ALERT ACTIVE!</div>
+            <div class="small text-light">
+                <strong>{{ monitor_stats.duress_alarms }}</strong> extraction attempt(s) unlocked carriers using a <strong>Decoy / Duress Passcode</strong>. An operator may be compromised or acting under physical duress. Immediate forensic review recommended!
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 6 Real-Time Security Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Security Events -->
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Total Audit Events</div>
+                    <div class="stat-number">{{ monitor_stats.total_events }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-activity me-1"></i>Recorded Logs</div>
+                </div>
+                <div class="stat-icon purple">
+                    <i class="bi bi-list-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Authentication Events (Logins) -->
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Logins (Success / Fail)</div>
+                    <div class="stat-number" style="font-size: 1.5rem;">
+                        <span class="text-success">{{ monitor_stats.login_success }}</span>
+                        <span class="text-secondary fs-5">/</span>
+                        <span class="text-danger">{{ monitor_stats.login_failed }}</span>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        <span class="text-success">{{ monitor_stats.login_success }} OK</span> &bull; 
+                        <span class="text-danger">{{ monitor_stats.login_failed }} Failed</span>
+                    </div>
+                </div>
+                <div class="stat-icon {{ 'red' if monitor_stats.login_failed > 0 else 'green' }}">
+                    <i class="bi bi-person-lock"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Steganography Operations -->
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Stego Events (Hide / Extract)</div>
+                    <div class="stat-number" style="font-size: 1.5rem;">
+                        <span class="text-purple" style="color: var(--purple-light);">{{ monitor_stats.hide_events }}</span>
+                        <span class="text-secondary fs-5">/</span>
+                        <span class="text-cyan">{{ monitor_stats.extract_events }}</span>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        <span>{{ monitor_stats.hide_events }} Encoded</span> &bull; 
+                        <span>{{ monitor_stats.extract_events }} Extracted</span>
+                    </div>
+                </div>
+                <div class="stat-icon cyan">
+                    <i class="bi bi-eye-slash"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Integrity Verification & Tamper Alerts -->
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Integrity (Verified / Tampered)</div>
+                    <div class="stat-number" style="font-size: 1.5rem;">
+                        <span class="text-success">{{ monitor_stats.integrity_verified }}</span>
+                        <span class="text-secondary fs-5">/</span>
+                        <span class="text-danger">{{ monitor_stats.integrity_tampered }}</span>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        <span class="text-success">{{ monitor_stats.integrity_verified }} Intact</span> &bull; 
+                        <span class="text-danger">{{ monitor_stats.integrity_tampered }} Altered</span>
+                    </div>
+                </div>
+                <div class="stat-icon {{ 'red' if monitor_stats.integrity_tampered > 0 else 'green' }}">
+                    <i class="bi bi-patch-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Suspicious Upload Rejections -->
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Suspicious Rejections</div>
+                    <div class="stat-number text-warning">{{ monitor_stats.suspicious_rejections }}</div>
+                    <div class="small text-muted mt-1">
+                        {% if monitor_stats.suspicious_rejections > 0 %}
+                            <span class="text-warning fw-bold"><i class="bi bi-shield-x"></i> Threats Blocked</span>
+                        {% else %}
+                            <span class="text-success"><i class="bi bi-check2"></i> Zero Violations</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-icon red">
+                    <i class="bi bi-shield-slash"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Duress / Plausible Deniability Alarms -->
+        <div class="col-sm-6 col-xl">
+            <div class="stat-card" style="{{ 'border-color: #ef4444 !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);' if monitor_stats.duress_alarms > 0 else '' }}">
+                <div>
+                    <div class="stat-label">Duress Alarms</div>
+                    <div class="stat-number {{ 'text-danger fw-bold' if monitor_stats.duress_alarms > 0 else 'text-success' }}">
+                        {{ monitor_stats.duress_alarms }}
+                    </div>
+                    <div class="small text-muted mt-1">
+                        {% if monitor_stats.duress_alarms > 0 %}
+                            <span class="text-danger fw-bold"><i class="bi bi-exclamation-octagon"></i> Coercion Alert!</span>
+                        {% else %}
+                            <span class="text-success"><i class="bi bi-shield-check"></i> Normal State</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-icon {{ 'red' if monitor_stats.duress_alarms > 0 else 'green' }}">
+                    <i class="bi bi-mask"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="cyber-card mb-4 p-3">
+        <form method="GET" action="{{ url_for('admin_security_monitor') }}" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <label class="form-label small text-secondary mb-1">Event Category</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">All Security Events</option>
+                    <option value="LOGIN" {{ 'selected' if filter_category == 'LOGIN' }}>Authentication (Logins)</option>
+                    <option value="HIDE" {{ 'selected' if filter_category == 'HIDE' }}>Stego Hide / Encoding</option>
+                    <option value="EXTRACT" {{ 'selected' if filter_category == 'EXTRACT' }}>Stego Extract / Decryption</option>
+                    <option value="INTEGRITY" {{ 'selected' if filter_category == 'INTEGRITY' }}>Data Integrity Checks</option>
+                    <option value="REJECTION" {{ 'selected' if filter_category == 'REJECTION' }}>Suspicious File Rejections</option>
+                    <option value="QR" {{ 'selected' if filter_category == 'QR' }}>QR Code Events</option>
+                    <option value="DURESS" {{ 'selected' if filter_category == 'DURESS' }}>🚨 Duress / Coercion Alarms</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small text-secondary mb-1">Event Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    <option value="SUCCESS" {{ 'selected' if filter_status == 'SUCCESS' }}>SUCCESS</option>
+                    <option value="FAILED" {{ 'selected' if filter_status == 'FAILED' }}>FAILED</option>
+                    <option value="BLOCKED" {{ 'selected' if filter_status == 'BLOCKED' }}>BLOCKED / REJECTED</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small text-secondary mb-1">Keyword / Filename</label>
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Filter by filename, IP, or details..." value="{{ search_query or '' }}">
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end gap-2 pt-md-3">
+                <button type="submit" class="btn btn-sm btn-cyber-primary flex-grow-1">
+                    <i class="bi bi-filter"></i> Apply Filters
+                </button>
+                {% if filter_category or filter_status or search_query %}
+                    <a href="{{ url_for('admin_security_monitor') }}" class="btn btn-sm btn-cyber-secondary">
+                        Reset
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Activity Logs Table -->
+    <div class="cyber-card">
+        <div class="cyber-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-terminal-split text-info"></i>
+                <span class="text-white">Forensic Audit Stream (Filtered Results)</span>
+            </div>
+            <span class="badge badge-cyber na">{{ logs.total }} Events Matching</span>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-cyber mb-0">
+                <thead>
+                    <tr>
+                        <th>Log ID</th>
+                        <th>Timestamp (UTC)</th>
+                        <th>Event Operation</th>
+                        <th>User ID & Username</th>
+                        <th>Target Image / Filename</th>
+                        <th>Status</th>
+                        <th>Integrity Result</th>
+                        <th>Client IP</th>
+                        <th>Forensic Audit Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs.items %}
+                        {% for log in logs.items %}
+                            <tr>
+                                <td class="font-monospace text-muted small">#{{ log.id }}</td>
+                                <td class="small font-monospace text-secondary">
+                                    {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </td>
+                                <td>
+                                    {% if 'LOGIN' in log.operation %}
+                                        <span class="badge badge-cyber na"><i class="bi bi-person-lock me-1"></i> LOGIN</span>
+                                    {% elif log.operation == 'HIDE_MESSAGE' %}
+                                        <span class="badge badge-cyber admin"><i class="bi bi-eye-slash me-1"></i> ENCODE</span>
+                                    {% elif log.operation == 'EXTRACT_MESSAGE' %}
+                                        <span class="badge badge-cyber user"><i class="bi bi-unlock me-1"></i> EXTRACT</span>
+                                    {% elif log.operation == 'INTEGRITY_CHECK' %}
+                                        <span class="badge badge-cyber verified"><i class="bi bi-patch-check me-1"></i> INTEGRITY</span>
+                                    {% elif 'REJECT' in log.operation or 'SUSPICIOUS' in log.operation %}
+                                        <span class="badge badge-cyber failed"><i class="bi bi-shield-x me-1"></i> REJECTED</span>
+                                    {% elif 'QR' in log.operation %}
+                                        <span class="badge badge-cyber user"><i class="bi bi-qr-code me-1"></i> QR</span>
+                                    {% elif 'DURESS' in log.operation %}
+                                        <span class="badge bg-danger text-white"><i class="bi bi-mask me-1"></i> DURESS ALARM</span>
+                                    {% else %}
+                                        <span class="badge badge-cyber na">{{ log.operation }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.user %}
+                                        <span class="text-light fw-medium">{{ log.user.username }}</span>
+                                        <span class="badge badge-cyber {{ 'admin' if log.user.is_admin else 'user' }} ms-1" style="font-size: 0.65rem;">
+                                            #{{ log.user.id }} ({{ log.user.role }})
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted small">ID: {{ log.user_id or '—' }} (Anonymous)</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.filename %}
+                                        <span class="text-light font-monospace small">{{ log.filename }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.status == 'SUCCESS' %}
+                                        <span class="badge badge-cyber success"><i class="bi bi-check2"></i> SUCCESS</span>
+                                    {% elif log.status == 'BLOCKED' %}
+                                        <span class="badge badge-cyber failed"><i class="bi bi-dash-circle"></i> BLOCKED</span>
+                                    {% elif log.status == 'DURESS_ALARM' %}
+                                        <span class="badge bg-danger text-white"><i class="bi bi-exclamation-octagon-fill"></i> DURESS TRIGGERED</span>
+                                    {% else %}
+                                        <span class="badge badge-cyber failed"><i class="bi bi-x-circle"></i> FAILED</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.integrity_status == 'VERIFIED' %}
+                                        <span class="badge badge-cyber verified"><i class="bi bi-shield-check"></i> VERIFIED</span>
+                                    {% elif log.integrity_status == 'TAMPERED' %}
+                                        <span class="badge badge-cyber tampered"><i class="bi bi-exclamation-triangle"></i> TAMPERED</span>
+                                    {% else %}
+                                        <span class="badge badge-cyber na">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="font-monospace small text-secondary">
+                                    {{ log.ip_address or '127.0.0.1' }}
+                                </td>
+                                <td class="small text-secondary" style="max-width: 280px;">
+                                    {{ log.details or '—' }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="bi bi-shield-check fs-2 d-block mb-1"></i>
+                                No security events match the current filter criteria.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if logs.pages > 1 %}
+            <div class="cyber-card-header justify-content-between">
+                <span class="small text-muted">Page {{ logs.page }} of {{ logs.pages }}</span>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if logs.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('admin_security_monitor', page=logs.prev_num, category=filter_category, status=filter_status, search=search_query) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        {% if logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('admin_security_monitor', page=logs.next_num, category=filter_category, status=filter_status, search=search_query) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

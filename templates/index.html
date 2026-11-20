@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Cybersecurity Steganography & Integrity Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="row align-items-center gy-5 py-5">
+        <div class="col-lg-7">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background: rgba(37, 99, 235, 0.15); border: 1px solid var(--purple-vibrant);">
+                <span class="spinner-grow spinner-grow-sm text-info" role="status"></span>
+                <span class="small fw-semibold text-light">MIL-STD Cryptographic Security Suite</span>
+            </div>
+            <h1 class="display-4 fw-extrabold text-white mb-3" style="letter-spacing: -1px; line-height: 1.15;">
+                Conceal Intelligence.<br>
+                <span style="background: linear-gradient(135deg, var(--purple-light), var(--cyan-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Defense-Grade Steganography.
+                </span>
+            </h1>
+            <p class="lead text-secondary mb-4" style="max-width: 600px;">
+                <strong>Our Secret</strong> pairs authenticated <strong>AES-256-GCM</strong> encryption with 
+                lossless <strong>Least Significant Bit (LSB)</strong> steganography and 
+                pre-flight capacity safeguards for infallible covert communications.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{{ url_for('register') }}" class="btn btn-cyber-primary btn-lg px-4">
+                    <i class="bi bi-shield-lock-fill"></i> Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-cyber-outline btn-lg px-4">
+                    <i class="bi bi-box-arrow-in-right"></i> Access Portal
+                </a>
+            </div>
+
+            <!-- Demo Quick Credentials Badge -->
+            <div class="mt-4 p-3 rounded-3" style="background: rgba(20, 31, 56, 0.5); border: 1px dashed var(--border-color); max-width: 520px;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="small text-muted text-uppercase fw-bold">Pre-Configured Demo Accounts:</div>
+                        <div class="small text-light mt-1">
+                            <span class="badge badge-cyber admin me-1">Admin</span> <code>admin</code> / <code>Admin@123456</code>
+                            <span class="badge badge-cyber user ms-2 me-1">User</span> <code>testuser</code> / <code>User@123456</code>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('login') }}" class="btn btn-sm btn-cyber-secondary">
+                        Sign In <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <!-- Cyber Graphic Card -->
+            <div class="cyber-card p-4 position-relative">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom border-secondary border-opacity-25">
+                    <span class="text-uppercase small text-secondary fw-bold">Active Defense Matrix</span>
+                    <span class="badge badge-cyber verified"><i class="bi bi-check-circle me-1"></i> OPERATIONAL</span>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="p-3 rounded mb-3" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon purple" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold text-white">AES-256-GCM Cipher</div>
+                                <div class="small text-secondary">Authenticated encryption with 12-byte IV & 16-byte tag</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded mb-3" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon cyan" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold text-white">LSB Pixel Steganography</div>
+                                <div class="small text-secondary">Lossless RGB channel embedding with capacity safeguards</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon green" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold text-white">Defensive File Inspection</div>
+                                <div class="small text-secondary">Magic signature analysis and decompression bomb prevention</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Pillars -->
+    <div class="row g-4 mt-2">
+        <div class="col-md-4">
+            <div class="cyber-card h-100 p-4">
+                <div class="stat-icon purple mb-3">
+                    <i class="bi bi-eye-slash"></i>
+                </div>
+                <h5 class="text-white fw-bold mb-2">Covert Transmission</h5>
+                <p class="text-secondary small mb-0">
+                    Embed highly sensitive textual payloads directly into PNG or BMP cover images without altering visual perception. Automatic capacity estimation prevents image overflow.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="cyber-card h-100 p-4">
+                <div class="stat-icon cyan mb-3">
+                    <i class="bi bi-qr-code"></i>
+                </div>
+                <h5 class="text-white fw-bold mb-2">Optical QR Tools Suite</h5>
+                <p class="text-secondary small mb-0">
+                    Generate optical tokens with high Reed-Solomon error correction and decode QR codes via multi-pass computer vision.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="cyber-card h-100 p-4">
+                <div class="stat-icon green mb-3">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+                <h5 class="text-white fw-bold mb-2">Defense Audit History</h5>
+                <p class="text-secondary small mb-0">
+                    Maintain detailed forensic history of every stego and integrity operation. Zero knowledge of plaintext secret messages is preserved in audit records.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

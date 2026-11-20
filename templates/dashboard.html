@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Operational Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4">
+    <!-- Top Welcome Banner -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-4 rounded-3" style="background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h2 class="text-white fw-bold mb-0">Welcome, {{ current_user.username }}</h2>
+                <span class="badge badge-cyber {{ 'admin' if current_user.is_admin else 'user' }}">
+                    <i class="bi bi-shield-fill-check me-1"></i>{{ current_user.role | upper }}
+                </span>
+            </div>
+            <p class="text-secondary small mb-0">
+                Encrypted Image Steganography Operations Console &bull; Session Active
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('hide_message') }}" class="btn btn-cyber-primary">
+                <i class="bi bi-eye-slash-fill"></i> Hide Secret
+            </a>
+            <a href="{{ url_for('extract_message') }}" class="btn btn-cyber-outline">
+                <i class="bi bi-unlock-fill"></i> Extract Secret
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 Real Database Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Images Processed -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Images Processed</div>
+                    <div class="stat-number">{{ stats.total_images_processed }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-images me-1"></i>Total Stego Ops</div>
+                </div>
+                <div class="stat-icon purple">
+                    <i class="bi bi-file-earmark-image"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Successful Hide Operations -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Successful Hides</div>
+                    <div class="stat-number" style="color: var(--purple-light);">{{ stats.successful_hides }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-lock me-1"></i>AES-GCM Encrypted</div>
+                </div>
+                <div class="stat-icon purple">
+                    <i class="bi bi-eye-slash"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Successful Extract Operations -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Successful Extracts</div>
+                    <div class="stat-number" style="color: var(--cyan-accent);">{{ stats.successful_extracts }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-check2-circle me-1"></i>Payloads Verified</div>
+                </div>
+                <div class="stat-icon cyan">
+                    <i class="bi bi-unlock"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Active Stego Carriers -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Active Carriers</div>
+                    <div class="stat-number text-success">{{ stats.active_carriers }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-shield-check text-success me-1"></i>Active on Vault</div>
+                </div>
+                <div class="stat-icon green">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 2: Message Expiry & Server Cleanup Banner -->
+    <div class="cyber-card p-3 mb-4" style="background: var(--bg-surface); border-left: 4px solid var(--purple-vibrant);">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon purple" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-white">Message Expiry & Server Cleanup:</span>
+                        <span class="badge badge-cyber {{ 'tampered' if stats.expired_count > 0 else 'na' }}">
+                            {{ stats.expired_count }} Expired
+                        </span>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Expired payloads are automatically blocked from decryption. Run server cleanup to purge expired carrier images from server storage.
+                        <span class="text-warning-emphasis d-block" style="font-size: 0.76rem;">
+                            *Notice: Downloaded offline copies cannot be remotely deleted from recipient devices once acquired.
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <form method="POST" action="{{ url_for('cleanup_expired_files') }}" class="mb-0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-sm btn-cyber-outline text-nowrap">
+                    <i class="bi bi-trash3 me-1"></i> Clean Expired Server Files
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Action Launchpad Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="cyber-card p-3 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-eye-slash text-purple fs-4" style="color: var(--purple-light);"></i>
+                        <h6 class="text-white fw-bold mb-0">Hide Confidential Message</h6>
+                    </div>
+                    <p class="text-secondary small mb-3">
+                        Encrypt payload via AES-256-GCM and embed into image pixels using LSB steganography.
+                    </p>
+                </div>
+                <a href="{{ url_for('hide_message') }}" class="btn btn-sm btn-cyber-primary w-100">
+                    Open Embedder <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="cyber-card p-3 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-unlock text-cyan fs-4" style="color: var(--cyan-accent);"></i>
+                        <h6 class="text-white fw-bold mb-0">Extract & Authenticate</h6>
+                    </div>
+                    <p class="text-secondary small mb-3">
+                        Retrieve hidden bits from LSB and verify the cryptographic GCM authentication tag.
+                    </p>
+                </div>
+                <a href="{{ url_for('extract_message') }}" class="btn btn-sm btn-cyber-outline w-100">
+                    Open Extractor <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="cyber-card p-3 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-qr-code text-cyan fs-4" style="color: var(--cyan-accent);"></i>
+                        <h6 class="text-white fw-bold mb-0">Optical QR Code Tools</h6>
+                    </div>
+                    <p class="text-secondary small mb-3">
+                        Generate high-density QR tokens with Level H error correction and scan uploaded QR images.
+                    </p>
+                </div>
+                <a href="{{ url_for('qr_tools') }}" class="btn btn-sm btn-cyber-secondary w-100">
+                    Open QR Suite <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incoming Covert Transmissions (Secret Inbox) -->
+    <div class="cyber-card">
+        <div class="cyber-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-inbox-fill text-cyan"></i>
+                <span class="text-white fw-bold">Incoming Secret Transmissions (Covert Inbox)</span>
+                {% if received_inbox %}
+                    <span class="badge bg-cyan text-dark rounded-pill ms-2">{{ received_inbox | length }} Available</span>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('covert_inbox') }}" class="btn btn-sm btn-cyber-primary">
+                Open Full Secret Inbox & Outbox <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-cyber align-middle">
+                <thead>
+                    <tr>
+                        <th>Sender</th>
+                        <th>Carrier File</th>
+                        <th>Dimensions & Type</th>
+                        <th>Status</th>
+                        <th>Dispatched At</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if received_inbox %}
+                        {% for r in received_inbox %}
+                            <tr style="{{ 'background: rgba(14, 165, 233, 0.05);' if not r.is_read else '' }}">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="stat-icon cyan" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-white fw-bold">@{{ r.sender.username if r.sender else 'Operator' }}</span>
+                                            <div class="text-muted small" style="font-size: 0.72rem;">{{ r.sender.role | upper if r.sender else 'USER' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-light font-monospace small d-block">{{ r.filename }}</span>
+                                    <span class="text-secondary small" style="font-size: 0.72rem;">Cover: {{ r.original_filename }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark border border-secondary text-info">{{ r.image_dimensions }}</span>
+                                    <span class="badge bg-dark border border-secondary text-purple ms-1">{{ r.payload_type }}</span>
+                                </td>
+                                <td>
+                                    {% if not r.is_read %}
+                                        <span class="badge bg-danger text-white"><i class="bi bi-envelope-fill me-1"></i> NEW / UNREAD</span>
+                                    {% else %}
+                                        <span class="badge badge-cyber verified"><i class="bi bi-check2-all me-1"></i> EXTRACTED</span>
+                                    {% endif %}
+                                    {% if r.burn_after_reading %}
+                                        <span class="badge bg-danger ms-1"><i class="bi bi-fire me-1"></i> BURN</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-secondary small font-monospace">
+                                    {{ r.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ url_for('download_file', filename=r.filename) }}" class="btn btn-sm btn-cyber-outline" title="Download carrier PNG">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        {% if r.payload_type == 'QR' %}
+                                            <a href="{{ url_for('qr_tools', scan_carrier=r.filename) }}" class="btn btn-sm btn-cyber-primary" title="1-Click Scan & Decode QR">
+                                                <i class="bi bi-qr-code-scan me-1"></i> Scan QR
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('extract_message', carrier=r.filename) }}" class="btn btn-sm btn-cyber-primary" title="1-Click Decrypt & Extract">
+                                                <i class="bi bi-unlock-fill me-1"></i> Extract Secret
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                <h6 class="text-white fw-bold mb-1">Your Secret Inbox is Clean</h6>
+                                <p class="small text-secondary mb-0">When another user conceals a secret and dispatches it to your account, it will appear here for you to download and extract.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Hide Secret Message (Steganography){% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <!-- Header Card -->
+            <div class="cyber-card mb-4 p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon purple" style="width: 54px; height: 54px;">
+                        <i class="bi bi-eye-slash-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white fw-bold mb-1">LSB Steganographic Embedding & Encryption</h4>
+                        <p class="text-secondary small mb-0">
+                            Encrypt text via <strong>AES-256-GCM</strong> and conceal binary ciphertext inside the Least Significant Bits of lossless PNG/BMP pixels.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('hide_message') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="row g-4">
+                    <!-- Left Column: Image Upload & Preview -->
+                    <div class="col-md-6">
+                        <div class="cyber-card p-4 h-100">
+                            <h6 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                                <i class="bi bi-image text-purple"></i> 1. Select Cover Image (PNG / BMP)
+                            </h6>
+
+                            <!-- Drag & Drop Zone -->
+                            <div class="upload-dropzone mb-3" id="uploadDropzone">
+                                <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                                <h6 class="text-white fw-semibold mb-1">Click to browse or drop cover image</h6>
+                                <p class="text-secondary small mb-0">Supports PNG and BMP lossless formats (Max: 16MB)</p>
+                                <input type="file" id="imageFileInput" name="image" accept=".png,.bmp" class="d-none" required>
+                            </div>
+                            <div class="mb-3 text-start small text-muted p-2 rounded" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); font-size: 0.76rem;">
+                                <i class="bi bi-shield-check text-info me-1"></i>
+                                <span><strong>Defensive Inspection:</strong> Signatures, format integrity, and pixel flood limits (&le; 4096&times;4096 px) are validated on upload. <em>(Basic file inspection is not a complete antivirus).</em></span>
+                            </div>
+
+                            <!-- Live Image Preview Container -->
+                            <div id="imagePreviewContainer" class="d-none">
+                                <div class="p-2 rounded mb-3 text-center" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                                    <img id="imagePreview" src="" alt="Cover Image Preview" class="img-fluid rounded mb-2" style="max-height: 180px; object-fit: contain;">
+                                    <div id="imageInfo" class="small text-secondary fw-medium"></div>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Capacity Info Card (Feature 1: RGB LSB + OS01 Overhead) -->
+                            <div id="capacityInfoCard" class="p-3 rounded d-none" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small text-uppercase fw-bold text-secondary">
+                                        <i class="bi bi-cpu me-1"></i> RGB LSB Capacity Matrix
+                                    </span>
+                                    <span id="capDimensions" class="badge badge-cyber na">0x0</span>
+                                </div>
+                                <div class="small text-muted mb-2 font-monospace" style="font-size: 0.78rem;">
+                                    Protocol: <strong class="text-info">OS01</strong> (8-byte header overhead included)
+                                </div>
+                                
+                                <div class="row g-2 small mb-2">
+                                    <div class="col-6">
+                                        <span class="text-secondary d-block">Max Message Capacity:</span>
+                                        <strong id="capMaxCapacity" class="text-cyan">0 bytes</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-secondary d-block">Current Message Size:</span>
+                                        <strong id="capCurrentSize" class="text-purple">0 bytes</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-secondary d-block">Remaining Capacity:</span>
+                                        <strong id="capRemaining" class="text-success">0 bytes</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-secondary d-block">Capacity Used:</span>
+                                        <strong id="capPercentage" class="text-light">0%</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="progress mb-2" style="height: 12px; background: rgba(0,0,0,0.5);">
+                                    <div id="capacityProgressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%; font-size: 0.7rem; font-weight: bold;">0%</div>
+                                </div>
+
+                                <!-- Oversized Warning Box -->
+                                <div id="oversizedWarningAlert" class="alert alert-danger py-2 px-3 small d-none mb-0" role="alert" style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--danger-accent); color: #fca5a5;">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                    <strong>Oversized Message Warning!</strong> Message exceeds maximum carrier capacity by <span id="oversizedByteCount">0</span> bytes.
+                                </div>
+                            </div>
+
+                            <!-- Demo helper -->
+                            <div class="mt-3 p-2 rounded small text-muted text-center" style="background: rgba(0,0,0,0.2);">
+                                Need a test image? A sample cover is stored at <br>
+                                <code class="text-info">static/images/sample_cover.png</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Secret Message / File & Encryption Password -->
+                    <div class="col-md-6">
+                        <div class="cyber-card p-4 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                                    <i class="bi bi-shield-lock text-cyan"></i> 2. Secret Payload & Cipher Key
+                                </h6>
+
+                                <!-- Target Recipient / Operative Dispatch & Access Control -->
+                                <div class="mb-3 p-3 rounded" style="background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-color);">
+                                    <label class="form-label text-white fw-bold d-flex align-items-center justify-content-between mb-2">
+                                        <span><i class="bi bi-person-fill-lock text-cyan me-1"></i> Send Secret To (Target Recipient)</span>
+                                        <span class="badge badge-cyber verified">ACCESS CONTROL</span>
+                                    </label>
+
+                                    <!-- Mode Radios: Specific User vs Public -->
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <div class="form-check p-2 rounded border border-secondary border-opacity-25" style="background: rgba(0,0,0,0.25);">
+                                                <input class="form-check-input ms-1 me-2" type="radio" name="access_mode_type" id="mode_specific" value="specific" checked>
+                                                <label class="form-check-label text-white small fw-bold" for="mode_specific" style="cursor: pointer;">
+                                                    <i class="bi bi-person-badge text-cyan me-1"></i> Target User (Enter ID)
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check p-2 rounded border border-secondary border-opacity-25" style="background: rgba(0,0,0,0.25);">
+                                                <input class="form-check-input ms-1 me-2" type="radio" name="access_mode_type" id="mode_public" value="public">
+                                                <label class="form-check-label text-white small fw-bold" for="mode_public" style="cursor: pointer;">
+                                                    <i class="bi bi-globe2 text-warning me-1"></i> Public (Open Carrier)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Specific User Input Box -->
+                                    <div id="specificUserBox">
+                                        <label for="recipient_input" class="form-label small text-secondary mb-1">
+                                            Recipient User ID or Username:
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-dark border-secondary border-opacity-50 text-cyan">
+                                                <i class="bi bi-person-check-fill"></i>
+                                            </span>
+                                            <input type="text" class="form-control font-monospace" id="recipient_input" name="recipient_input" 
+                                                   list="activeUsersDatalist" placeholder="Enter User ID (e.g. 2, 3) or Username (e.g. testuser, agent2)">
+                                            <datalist id="activeUsersDatalist">
+                                                {% if users %}
+                                                    {% for u in users %}
+                                                        <option value="{{ u.id }}">ID: {{ u.id }} &mdash; @{{ u.username }} ({{ u.email }})</option>
+                                                        <option value="{{ u.username }}">@{{ u.username }} (ID: {{ u.id }})</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </datalist>
+                                        </div>
+
+                                        <!-- Quick Select Pills (Non-Admin Users Only) -->
+                                        {% if users %}
+                                            <div class="d-flex align-items-center flex-wrap gap-1 mt-2">
+                                                <span class="small text-muted" style="font-size: 0.72rem;">Available Operatives:</span>
+                                                {% for u in users %}
+                                                    <button type="button" class="badge btn btn-sm py-1 px-2 btn-recipient-pill text-info border border-info border-opacity-25" 
+                                                            data-user-id="{{ u.id }}" data-username="{{ u.username }}" 
+                                                            style="background: rgba(14, 165, 233, 0.12); font-size: 0.73rem;">
+                                                        <i class="bi bi-at"></i>{{ u.username }} (ID: {{ u.id }})
+                                                    </button>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="form-text small text-secondary mt-1" style="font-size: 0.73rem;">
+                                            <i class="bi bi-shield-lock-fill text-cyan me-1"></i>
+                                            Enter the target operative's <strong>User ID</strong> or <strong>Username</strong>. This encrypted carrier will be delivered exclusively to their <strong>Secret Inbox</strong>.
+                                        </div>
+                                    </div>
+
+                                    <!-- Public Mode Notice -->
+                                    <div id="publicUserNotice" class="d-none mt-2 p-2 rounded" style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.3);">
+                                        <div class="small text-warning" style="font-size: 0.75rem;">
+                                            <i class="bi bi-globe2 me-1"></i>
+                                            <strong>Public Carrier Mode:</strong> No recipient restriction. Any operator with this carrier image and the decryption password can extract the confidential payload.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Feature 2: Payload Mode Selector (Text vs Cloaked File) -->
+                                <div class="btn-group w-100 mb-3" role="group">
+                                    <input type="radio" class="btn-check" name="payload_type" id="payload_type_text" value="text" checked>
+                                    <label class="btn btn-outline-info py-2 small fw-semibold" for="payload_type_text">
+                                        <i class="bi bi-file-text me-1"></i> Secret Text
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="payload_type" id="payload_type_file" value="file">
+                                    <label class="btn btn-outline-info py-2 small fw-semibold" for="payload_type_file">
+                                        <i class="bi bi-file-earmark-lock2 me-1"></i> Cloak Confidential File
+                                    </label>
+                                </div>
+
+                                <!-- Text Payload Container -->
+                                <div id="textPayloadContainer" class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="secret_message" class="form-label mb-0">Confidential Secret Message</label>
+                                        <span id="msgCharCounter" class="badge badge-cyber na">0 bytes</span>
+                                    </div>
+                                    <textarea class="form-control font-monospace" id="secret_message" name="secret_message" rows="4" placeholder="Enter sensitive intelligence, keys, or coordinates to conceal..." required></textarea>
+                                    <div class="form-text small text-muted">Never stored in plain text or server logs.</div>
+                                </div>
+
+                                <!-- File Payload Container (Feature 2) -->
+                                <div id="filePayloadContainer" class="mb-3 d-none">
+                                    <label for="secret_file_input" class="form-label mb-1">Select Confidential File to Cloak</label>
+                                    <div class="p-3 text-center rounded border border-secondary border-opacity-50" style="background: rgba(15, 23, 42, 0.5);">
+                                        <i class="bi bi-file-earmark-arrow-up text-cyan fs-2 mb-2 d-block"></i>
+                                        <input type="file" class="form-control" id="secret_file_input" name="secret_file">
+                                        <div class="small text-secondary mt-2" style="font-size: 0.76rem;">
+                                            Cloak PDF, TXT, DOCX, ZIP, etc. (Encrypted via AES-256-GCM before embedding).
+                                        </div>
+                                        <div id="secretFileNameDisplay" class="fw-semibold text-info small mt-1"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Password Field with Toggle & Feature 5 Generator -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="hide_password" class="form-label mb-0">Encryption Master Password</label>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-cyber-secondary dropdown-toggle py-0 px-2 small" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-magic text-warning me-1"></i> Generate
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow" style="background: var(--bg-surface); border: 1px solid var(--border-color); font-size: 0.85rem;">
+                                                <li>
+                                                    <button class="dropdown-item py-2" type="button" id="btnGenToken">
+                                                        <i class="bi bi-shield-shaded text-info me-2"></i> Military Token (20 Chars)
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item py-2" type="button" id="btnGenDiceware">
+                                                        <i class="bi bi-chat-quote text-success me-2"></i> Diceware Passphrase (4 Words)
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
+                                            <i class="bi bi-key"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="hide_password" name="password" placeholder="Passphrase for AES-256-GCM" required minlength="6">
+                                        <button class="btn btn-cyber-secondary btn-toggle-password" type="button" data-target="hide_password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Feature 5: Password Entropy & GPU Crack Time Meter -->
+                                    <div class="mt-2 p-2 rounded" style="background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-color);">
+                                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                                            <span class="text-secondary" style="font-size: 0.78rem;">Cryptographic Entropy:</span>
+                                            <span id="pwEntropyLabel" class="badge badge-cyber na" style="font-size: 0.72rem;">0 bits (Empty)</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px; background: rgba(0,0,0,0.4);">
+                                            <div id="pwEntropyBar" class="progress-bar" role="progressbar" style="width: 0%; background-color: #64748b; transition: width 0.3s ease;"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.74rem;">
+                                            <span class="text-muted"><i class="bi bi-cpu me-1"></i>GPU Brute-force:</span>
+                                            <span id="pwCrackTimeLabel" class="text-secondary font-monospace">Enter password to estimate</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Access & Lifecycle Security Policy (Multi-View vs One-Time Burn) -->
+                                <div class="mb-3 p-3 rounded" style="background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-color);">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0 text-white fw-bold">
+                                            <i class="bi bi-shield-check text-cyan me-1"></i> Access & Lifecycle Policy
+                                        </label>
+                                        <span class="badge badge-cyber verified">OP-SEC RULE</span>
+                                    </div>
+
+                                    <!-- Segmented Choice: Multi-View Time Expiry vs One-Time Burn-After-Reading -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="access_mode" id="mode_time_limited" value="time_limited" checked>
+                                            <label class="btn btn-outline-info w-100 p-2 text-start small h-100" for="mode_time_limited">
+                                                <div class="fw-bold text-info mb-1">
+                                                    <i class="bi bi-hourglass-split me-1"></i> Multi-View Expiry
+                                                </div>
+                                                <div class="text-secondary" style="font-size: 0.72rem; line-height: 1.25;">
+                                                    User can extract & view multiple times until expiry deadline.
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="radio" class="btn-check" name="access_mode" id="mode_burn_after_reading" value="burn">
+                                            <label class="btn btn-outline-danger w-100 p-2 text-start small h-100" for="mode_burn_after_reading">
+                                                <div class="fw-bold text-danger mb-1">
+                                                    <i class="bi bi-fire me-1"></i> Burn After Reading
+                                                </div>
+                                                <div class="text-secondary" style="font-size: 0.72rem; line-height: 1.25;">
+                                                    Ultra-sensitive: 1 view only. Self-destructs instantly on 1st read.
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hidden checkbox to preserve 100% backend compatibility with burn_after_reading -->
+                                    <input type="checkbox" id="burn_after_reading" name="burn_after_reading" value="1" class="d-none">
+
+                                    <!-- Time-Limited Expiry Options Container (active in Multi-View mode) -->
+                                    <div id="expiryOptionsContainer">
+                                        <label for="expiry_option" class="form-label small text-secondary mb-1">Access Expiry Window:</label>
+                                        <select class="form-select form-select-sm" id="expiry_option" name="expiry_option">
+                                            <option value="1h">1 Hour (Short Relay)</option>
+                                            <option value="24h" selected>24 Hours (Standard Operational)</option>
+                                            <option value="7d">7 Days (Extended Relay)</option>
+                                            <option value="custom">Custom Hours</option>
+                                            <option value="none">Permanent (No Expiry)</option>
+                                        </select>
+
+                                        <div class="mt-2 d-none" id="customExpiryContainer">
+                                            <label for="custom_expiry_hours" class="form-label small text-secondary mb-1">Custom Expiry (Hours):</label>
+                                            <input type="number" class="form-control form-control-sm" id="custom_expiry_hours" name="custom_expiry_hours" min="1" max="8760" placeholder="e.g. 48">
+                                        </div>
+                                    </div>
+
+                                    <!-- Dynamic policy explanation helper -->
+                                    <div id="policyExplanationBox" class="p-2 rounded small text-secondary mt-2" style="background: rgba(0,0,0,0.25); font-size: 0.75rem;">
+                                        <i class="bi bi-info-circle text-info me-1"></i>
+                                        <span id="policyExplanationText">
+                                            <strong>Multi-View Window:</strong> Recipient can extract and read this payload multiple times until the <strong>24 Hours</strong> deadline passes.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Feature: Plausible Deniability / Decoy Secret under Duress -->
+                                <div class="mb-3 p-3 rounded" style="background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-color);">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0 text-white fw-bold">
+                                            <i class="bi bi-mask text-warning me-1"></i> Plausible Deniability (Duress Defense)
+                                        </label>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="enable_deniable" name="enable_deniable" value="1">
+                                        </div>
+                                    </div>
+                                    <div class="text-secondary small mb-2" style="font-size: 0.74rem;">
+                                        Protects against coercion! Set a decoy passcode and decoy message. If forced to reveal your password, provide the Decoy Passcode to display an innocent message while triggering a silent SOC alert.
+                                    </div>
+
+                                    <!-- Collapsible Container for Decoy Secret -->
+                                    <div id="deniableFieldsContainer" class="d-none mt-2 pt-2 border-top border-secondary border-opacity-25">
+                                        <div class="mb-2">
+                                            <label for="decoy_password" class="form-label small text-warning mb-1">
+                                                <i class="bi bi-key-fill me-1"></i> Decoy Passcode (Duress Key):
+                                            </label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="password" class="form-control" id="decoy_password" name="decoy_password" placeholder="Different from Master Password" minlength="6">
+                                                <button class="btn btn-cyber-secondary btn-toggle-password" type="button" data-target="decoy_password">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-muted small mt-1" style="font-size: 0.72rem;">Must differ from Master Password.</div>
+                                        </div>
+
+                                        <div>
+                                            <label for="decoy_message" class="form-label small text-warning mb-1">
+                                                <i class="bi bi-chat-left-dots me-1"></i> Innocent Decoy Message:
+                                            </label>
+                                            <textarea class="form-control form-control-sm font-monospace" id="decoy_message" name="decoy_message" rows="2" placeholder="e.g. Project meeting rescheduled to Monday 10:00 AM at Headquarters."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-top border-secondary border-opacity-25">
+                                <button type="submit" id="btnHideSubmit" class="btn btn-cyber-primary w-100 py-2 fs-6">
+                                    <i class="bi bi-lock-fill"></i> Encrypt & Embed into Image
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modeSpecific = document.getElementById('mode_specific');
+    var modePublic = document.getElementById('mode_public');
+    var specificBox = document.getElementById('specificUserBox');
+    var publicNotice = document.getElementById('publicUserNotice');
+    var recipInput = document.getElementById('recipient_input');
+
+    function updateAccessMode() {
+        if (modePublic && modePublic.checked) {
+            if (specificBox) specificBox.classList.add('d-none');
+            if (publicNotice) publicNotice.classList.remove('d-none');
+            if (recipInput) {
+                recipInput.value = '';
+                recipInput.removeAttribute('required');
+            }
+        } else {
+            if (specificBox) specificBox.classList.remove('d-none');
+            if (publicNotice) publicNotice.classList.add('d-none');
+            if (recipInput) {
+                recipInput.setAttribute('required', 'required');
+            }
+        }
+    }
+
+    if (modeSpecific && modePublic) {
+        modeSpecific.addEventListener('change', updateAccessMode);
+        modePublic.addEventListener('change', updateAccessMode);
+        updateAccessMode();
+    }
+
+    // Quick Select Pills (1-Click Fill of User ID)
+    document.querySelectorAll('.btn-recipient-pill').forEach(function(pill) {
+        pill.addEventListener('click', function() {
+            if (recipInput) {
+                recipInput.value = this.getAttribute('data-user-id');
+                recipInput.focus();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,2 @@
+# Steganography module initialization
+

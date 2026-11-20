@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Our Secret{% endblock %} – Defense-Grade Image Steganography Platform</title>
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Cyber Dark Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Cyber Shield Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path fill=%22%2300b4d8%22 d=%22M5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.638 1 1 0 0 1-.828 0 7 7 0 0 1-1.048-.638 11.8 11.8 0 0 1-2.517-2.454C2.127 10.487.745 7.17.149 2.692A1.54 1.54 0 0 1 1.192 1.43c.66-.215 1.777-.57 2.88-.87%22/></svg>">
+    <script>
+        // Feature 4: Apply theme immediately before render to avoid flash
+        (function() {
+            var savedTheme = localStorage.getItem('our_secret_theme') || 'enterprise-blue';
+            if (savedTheme === 'dark') savedTheme = 'enterprise-blue';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Horizontal Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-cyber">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand" href="{{ url_for('dashboard') if current_user else url_for('index') }}">
+                <i class="bi bi-shield-lock-fill brand-icon-shield fs-4"></i>
+                <span>OUR <strong style="color: var(--purple-light);">SECRET</strong></span>
+                <span class="badge badge-cyber na ms-1" style="font-size: 0.68rem; letter-spacing: 1px;">SEC-OPS</span>
+            </a>
+            
+            <button class="navbar-toggler text-light border-0" type="button" data-bs-toggle="collapse" data-bs-target="#cyberNavContent">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="cyberNavContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-1">
+                    {% if current_user %}
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">
+                                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'hide_message' }}" href="{{ url_for('hide_message') }}">
+                                <i class="bi bi-eye-slash-fill"></i> Hide Message
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'extract_message' }}" href="{{ url_for('extract_message') }}">
+                                <i class="bi bi-unlock-fill"></i> Extract Message
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'compare_images' }}" href="{{ url_for('compare_images') }}">
+                                <i class="bi bi-cpu"></i> Steganalysis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint in ['qr_tools', 'qr_generate', 'qr_scan'] }}" href="{{ url_for('qr_tools') }}">
+                                <i class="bi bi-qr-code"></i> QR Tools
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'covert_inbox' }}" href="{{ url_for('covert_inbox') }}">
+                                <i class="bi bi-inbox-fill"></i> Secret Inbox
+                                {% if unread_inbox_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.68rem;">{{ unread_inbox_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% if current_user.is_admin %}
+                        <!-- Admin Suite Consolidated Dropdown (Option A) -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning fw-semibold d-flex align-items-center gap-1 {{ 'active' if request.endpoint in ['admin_dashboard', 'admin_security_monitor', 'history'] }}" href="#" id="adminSuiteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-shield-fill-check"></i> Admin Suite
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark shadow-lg py-2" aria-labelledby="adminSuiteDropdown" style="min-width: 280px; background: var(--bg-surface); border: 1px solid rgba(234, 179, 8, 0.35);">
+                                <li class="px-3 py-1">
+                                    <div class="small text-uppercase fw-bold text-warning font-monospace" style="font-size: 0.68rem; letter-spacing: 1px;">
+                                        <i class="bi bi-shield-lock me-1"></i> SOC & System Controls
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider border-secondary opacity-25 my-1"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 {{ 'active' if request.endpoint == 'admin_dashboard' }}" href="{{ url_for('admin_dashboard') }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="stat-icon purple" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                <i class="bi bi-people-fill"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white small">User Management</div>
+                                                <div class="text-secondary" style="font-size: 0.72rem;">Roles, deactivation & accounts</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 {{ 'active' if request.endpoint == 'admin_security_monitor' }}" href="{{ url_for('admin_security_monitor') }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="stat-icon cyan" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                <i class="bi bi-shield-shaded"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white small">Security SOC Monitor</div>
+                                                <div class="text-secondary" style="font-size: 0.72rem;">Threats, duress alerts & forensic logs</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 px-3 {{ 'active' if request.endpoint == 'history' }}" href="{{ url_for('history') }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="stat-icon green" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                                <i class="bi bi-clock-history"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-white small">Audit Logs & History</div>
+                                                <div class="text-secondary" style="font-size: 0.72rem;">Raw event audit stream</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">
+                                <i class="bi bi-house-door-fill"></i> Overview
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Right Side Actions & Profile -->
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Feature 4: Multi-Theme Switcher Dropdown -->
+                    <div class="dropdown">
+                        <button id="themeToggleBtn" class="btn btn-cyber-secondary dropdown-toggle d-flex align-items-center gap-2 px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch UI Theme">
+                            <i id="themeToggleIcon" class="bi bi-shield-shaded text-info"></i>
+                            <span id="themeToggleLabel" class="d-none d-md-inline small fw-semibold">Enterprise</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: var(--bg-surface); border: 1px solid var(--border-color); min-width: 215px;">
+                            <li class="dropdown-header small text-muted text-uppercase fw-bold pb-1">
+                                <i class="bi bi-palette-fill me-1"></i> Theme Matrix
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center justify-content-between py-2 theme-select-btn" data-theme-val="enterprise-blue">
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span style="background: #2563eb; width: 14px; height: 14px; border-radius: 50%; display: inline-block;"></span>
+                                        <span class="small">Enterprise Blue</span>
+                                    </span>
+                                    <i class="bi bi-check2 theme-check-icon text-info" data-theme-check="enterprise-blue"></i>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center justify-content-between py-2 theme-select-btn" data-theme-val="tactical-emerald">
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span style="background: #10b981; width: 14px; height: 14px; border-radius: 50%; display: inline-block;"></span>
+                                        <span class="small">Tactical Emerald</span>
+                                    </span>
+                                    <i class="bi bi-check2 theme-check-icon text-success d-none" data-theme-check="tactical-emerald"></i>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center justify-content-between py-2 theme-select-btn" data-theme-val="navy-purple">
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span style="background: #9d4edd; width: 14px; height: 14px; border-radius: 50%; display: inline-block;"></span>
+                                        <span class="small">Navy Purple</span>
+                                    </span>
+                                    <i class="bi bi-check2 theme-check-icon text-purple d-none" data-theme-check="navy-purple"></i>
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider border-secondary my-1"></li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center justify-content-between py-2 theme-select-btn" data-theme-val="light">
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span style="background: #f8fafc; border: 1px solid #94a3b8; width: 14px; height: 14px; border-radius: 50%; display: inline-block;"></span>
+                                        <span class="small">Executive Light</span>
+                                    </span>
+                                    <i class="bi bi-check2 theme-check-icon text-primary d-none" data-theme-check="light"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {% if current_user %}
+                        <div class="dropdown">
+                            <button class="btn btn-cyber-secondary dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle fs-5" style="color: var(--purple-light);"></i>
+                                <span>{{ current_user.username }}</span>
+                                <span class="badge badge-cyber {{ 'admin' if current_user.is_admin else 'user' }}">
+                                    {{ current_user.role | upper }}
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                                <li>
+                                    <a class="dropdown-item text-light py-2" href="{{ url_for('profile') }}">
+                                        <i class="bi bi-person-gear me-2"></i> Security Profile
+                                    </a>
+                                </li>
+                                {% if current_user.is_admin %}
+                                <li>
+                                    <a class="dropdown-item text-warning py-2" href="{{ url_for('admin_dashboard') }}">
+                                        <i class="bi bi-sliders me-2"></i> Admin Management
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-info py-2" href="{{ url_for('admin_security_monitor') }}">
+                                        <i class="bi bi-shield-shaded me-2"></i> Security Activity Monitor
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider border-secondary"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger py-2" href="{{ url_for('logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Secure Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-cyber-outline">
+                            <i class="bi bi-box-arrow-in-right"></i> Log In
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-cyber-primary">
+                            <i class="bi bi-shield-plus"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Alerts Container -->
+    <div class="container-fluid px-lg-4 mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert" style="background: rgba(20, 31, 56, 0.9); border: 1px solid var(--border-color); color: #fff;">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+                            {% elif category == 'warning' %}
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                            {% endif %}
+                            <div>{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow-1 py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Cyber Footer -->
+    <footer>
+        <div class="container-fluid px-lg-4">
+            <div class="row align-items-center gy-2">
+                <div class="col-md-6 text-center text-md-start">
+                    <span class="fw-semibold text-light">Our Secret</span> &copy; {{ now.year }} — Defense-Grade Image Steganography Platform
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <span class="badge badge-cyber na me-2">AES-256-GCM</span>
+                    <span class="badge badge-cyber na me-2">LSB EMBEDDING</span>
+                    <span class="badge badge-cyber na me-2">QR ENCODING</span>
+                    <span class="badge badge-cyber na">SOC AUDIT</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Cyber UI JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

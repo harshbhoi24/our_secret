@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Security Console{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-3">
+    <!-- Header Banner -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-4 rounded-3" style="background: linear-gradient(135deg, rgba(30, 20, 50, 0.9), rgba(13, 21, 39, 0.95)); border: 1px solid rgba(234, 179, 8, 0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-shield-fill-exclamation text-warning fs-3"></i>
+                <h3 class="text-white fw-bold mb-0">System Security Administrator Console</h3>
+                <span class="badge badge-cyber admin">TOP SECRET CLEARANCE</span>
+            </div>
+            <p class="text-secondary small mb-0">
+                User administration, cryptographic integrity anomalies, and system-wide forensic audit logs.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin_security_monitor') }}" class="btn btn-sm btn-cyber-primary">
+                <i class="bi bi-shield-shaded me-1"></i> Security Activity Monitor
+            </a>
+            <div class="badge bg-warning text-dark p-2 font-monospace">
+                ADMIN: {{ current_user.username }}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 System-Wide Stat Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Users -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Total Registered Users</div>
+                    <div class="stat-number">{{ stats.total_users }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-people me-1"></i>Enrolled Operators</div>
+                </div>
+                <div class="stat-icon purple">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Total Operations -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">System Operations</div>
+                    <div class="stat-number" style="color: var(--cyan-accent);">{{ stats.total_operations }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-activity me-1"></i>Audit Trail Events</div>
+                </div>
+                <div class="stat-icon cyan">
+                    <i class="bi bi-cpu"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Failed Integrity Checks -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Tamper Anomalies</div>
+                    <div class="stat-number text-danger">{{ stats.failed_integrity_checks }}</div>
+                    <div class="small text-muted mt-1">
+                        {% if stats.failed_integrity_checks > 0 %}
+                            <span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Anomalies Detected</span>
+                        {% else %}
+                            <span class="text-success"><i class="bi bi-check2"></i> Zero Alerts</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-icon red">
+                    <i class="bi bi-shield-x"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Total Stego Records -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Vault Fingerprints</div>
+                    <div class="stat-number" style="color: var(--purple-light);">{{ stats.total_stego_records }}</div>
+                    <div class="small text-muted mt-1"><i class="bi bi-key me-1"></i>Registered Stego Images</div>
+                </div>
+                <div class="stat-icon green">
+                    <i class="bi bi-database-lock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Table Card -->
+    <div class="cyber-card mb-4">
+        <div class="cyber-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-person-gear text-purple"></i>
+                <span class="text-white">Operator & User Management</span>
+            </div>
+            <span class="badge badge-cyber user">{{ users|length }} Operators</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-cyber mb-0">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Account Status</th>
+                        <th>Enrolled Date</th>
+                        <th class="text-end">Administrative Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td class="font-monospace text-muted small">#{{ u.id }}</td>
+                            <td>
+                                <span class="fw-bold text-white">{{ u.username }}</span>
+                                {% if u.id == current_user.id %}
+                                    <span class="badge bg-secondary text-light ms-1" style="font-size: 0.65rem;">YOU</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary small">{{ u.email }}</td>
+                            <td>
+                                <span class="badge badge-cyber {{ 'admin' if u.is_admin else 'user' }}">
+                                    {{ u.role | upper }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if u.is_active %}
+                                    <span class="badge badge-cyber success"><i class="bi bi-check-circle"></i> ACTIVE</span>
+                                {% else %}
+                                    <span class="badge badge-cyber failed"><i class="bi bi-dash-circle"></i> DEACTIVATED</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary small font-monospace">
+                                {{ u.created_at.strftime('%Y-%m-%d') }}
+                            </td>
+                            <td class="text-end">
+                                {% if u.id != current_user.id %}
+                                    <div class="d-inline-flex gap-1">
+                                        <!-- Toggle Role -->
+                                        <form method="POST" action="{{ url_for('admin_toggle_role', target_user_id=u.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <button type="submit" class="btn btn-sm btn-cyber-secondary py-1 px-2" title="Toggle Admin/User Role">
+                                                <i class="bi bi-person-fill-gear"></i>
+                                                {{ 'Demote' if u.is_admin else 'Make Admin' }}
+                                            </button>
+                                        </form>
+
+                                        <!-- Toggle Active/Inactive -->
+                                        <form method="POST" action="{{ url_for('admin_toggle_status', target_user_id=u.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <button type="submit" class="btn btn-sm {{ 'btn-outline-warning' if u.is_active else 'btn-outline-success' }} py-1 px-2" title="Toggle Active Status">
+                                                <i class="bi {{ 'bi-pause-circle' if u.is_active else 'bi-play-circle' }}"></i>
+                                                {{ 'Deactivate' if u.is_active else 'Activate' }}
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete User -->
+                                        <form method="POST" action="{{ url_for('admin_delete_user', target_user_id=u.id) }}" onsubmit="return confirm('Permanently delete operator {{ u.username }} and all associated logs?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete User">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small italic">Current Operator</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- System-wide Security Activity Logs -->
+    <div class="cyber-card">
+        <div class="cyber-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-shield-shaded text-danger"></i>
+                <span class="text-white">System Security Activity Logs (Latest 20)</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('admin_security_monitor') }}" class="btn btn-sm btn-outline-info py-0 px-2" style="font-size: 0.8rem;">
+                    <i class="bi bi-broadcast me-1"></i> Full Monitor Stream
+                </a>
+                <span class="badge badge-cyber na">Zero Plaintext Knowledge</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-cyber mb-0">
+                <thead>
+                    <tr>
+                        <th>Operator</th>
+                        <th>Event</th>
+                        <th>Target File</th>
+                        <th>Status</th>
+                        <th>Integrity</th>
+                        <th>Forensic Summary</th>
+                        <th>Client IP</th>
+                        <th>Timestamp (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>
+                                {% if log.user %}
+                                    <span class="fw-semibold text-light">{{ log.user.username }}</span>
+                                    <span class="badge badge-cyber {{ 'admin' if log.user.is_admin else 'user' }} ms-1" style="font-size: 0.65rem;">
+                                        {{ log.user.role }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">Anonymous / System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.operation == 'HIDE_MESSAGE' %}
+                                    <span class="badge badge-cyber admin">HIDE</span>
+                                {% elif log.operation == 'EXTRACT_MESSAGE' %}
+                                    <span class="badge badge-cyber user">EXTRACT</span>
+                                {% elif log.operation == 'INTEGRITY_CHECK' %}
+                                    <span class="badge badge-cyber verified">INTEGRITY</span>
+                                {% else %}
+                                    <span class="badge badge-cyber na">{{ log.operation }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-light small font-monospace">
+                                {{ log.filename or '—' }}
+                            </td>
+                            <td>
+                                {% if log.status == 'SUCCESS' %}
+                                    <span class="badge badge-cyber success">SUCCESS</span>
+                                {% else %}
+                                    <span class="badge badge-cyber failed">FAILED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.integrity_status == 'VERIFIED' %}
+                                    <span class="badge badge-cyber verified">VERIFIED</span>
+                                {% elif log.integrity_status == 'TAMPERED' %}
+                                    <span class="badge badge-cyber tampered">TAMPERED</span>
+                                {% else %}
+                                    <span class="badge badge-cyber na">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-secondary" style="max-width: 250px;">
+                                {{ log.details or '—' }}
+                            </td>
+                            <td class="small font-monospace text-muted">
+                                {{ log.ip_address or '127.0.0.1' }}
+                            </td>
+                            <td class="small font-monospace text-secondary">
+                                {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

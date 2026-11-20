@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Register Account{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="cyber-card">
+                <div class="cyber-card-header text-center justify-content-center flex-column py-4">
+                    <div class="stat-icon cyan mb-2" style="width: 58px; height: 58px;">
+                        <i class="bi bi-person-plus fs-3"></i>
+                    </div>
+                    <h4 class="text-white fw-bold mb-1">Create Security Account</h4>
+                    <p class="text-secondary small mb-0">Enroll in the decentralized covert steganography system</p>
+                </div>
+                <div class="cyber-card-body p-4">
+                    <form method="POST" action="{{ url_for('register') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="e.g. shadow_agent" required minlength="3">
+                            </div>
+                            <div class="form-text small text-muted">Alphanumeric, at least 3 characters.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="agent@agency.sec" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Master Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="reg_password" name="password" placeholder="Min. 8 characters" required minlength="8">
+                                <button class="btn btn-cyber-secondary btn-toggle-password" type="button" data-target="reg_password">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label">Confirm Master Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+                                <button class="btn btn-cyber-secondary btn-toggle-password" type="button" data-target="confirm_password">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-cyber-primary w-100 py-2">
+                            <i class="bi bi-shield-check"></i> Register Security Credentials
+                        </button>
+                    </form>
+                </div>
+                <div class="p-3 text-center border-top border-secondary border-opacity-25 small" style="background: rgba(20, 31, 56, 0.3);">
+                    Already registered? <a href="{{ url_for('login') }}" class="text-info fw-semibold text-decoration-none">Sign in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

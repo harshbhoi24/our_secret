@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Secret Successfully Embedded{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="cyber-card p-4 text-center mb-4">
+                <div class="stat-icon green mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3 class="text-white fw-bold mb-2">Steganographic Concealment Complete!</h3>
+                <p class="text-secondary mb-4" style="max-width: 600px; margin: 0 auto;">
+                    Your message was encrypted with <strong>AES-256-GCM</strong>, embedded into the RGB Least Significant Bits, 
+                    and is ready for covert transmission.
+                </p>
+
+                <!-- Download Action Button -->
+                <a href="{{ result.download_url }}" class="btn btn-cyber-primary btn-lg px-4 py-3 mb-4 shadow-lg">
+                    <i class="bi bi-download fs-5"></i> Download Stego Image (PNG)
+                </a>
+
+                <!-- Technical Details Table -->
+                <div class="p-3 rounded text-start mb-4" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                    <div class="d-flex align-items-center justify-content-between pb-2 mb-3 border-bottom border-secondary border-opacity-25">
+                        <span class="small text-uppercase fw-bold text-secondary">Forensic & Technical Metadata</span>
+                        <span class="badge badge-cyber verified"><i class="bi bi-shield-check me-1"></i> CARRIER READY</span>
+                    </div>
+
+                    <div class="row g-3 small">
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Generated Stego File:</span>
+                            <span class="text-light fw-medium">{{ result.filename }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Original Cover File:</span>
+                            <span class="text-light fw-medium">{{ result.original_filename }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Image Dimensions:</span>
+                            <span class="text-light fw-medium">{{ result.dimensions }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Pixel LSB Utilization:</span>
+                            <span class="text-light fw-medium">{{ result.utilization }}%</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Concealed / Dispatched At:</span>
+                            <span class="text-light fw-bold"><i class="bi bi-clock-history text-cyan me-1"></i>{{ result.created_at }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Message Expiry:</span>
+                            <span class="badge badge-cyber {{ 'tampered' if result.is_expired else 'verified' }}">
+                                <i class="bi bi-clock me-1"></i>{{ result.expires_at }}
+                            </span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Plausible Deniability:</span>
+                            {% if result.has_plausible_deniability %}
+                                <span class="badge badge-cyber verified"><i class="bi bi-mask me-1"></i> ARMED (Duress Active)</span>
+                            {% else %}
+                                <span class="badge badge-cyber na"><i class="bi bi-dash-circle me-1"></i> Disabled</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary d-block">Target Recipient:</span>
+                            <span class="badge badge-cyber {{ 'verified' if result.recipient_id else 'na' }}">
+                                <i class="bi bi-person-fill me-1"></i>{{ result.recipient_username }}
+                            </span>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <div class="p-2 rounded text-muted small" style="background: rgba(0,0,0,0.25); font-size: 0.76rem;">
+                                <i class="bi bi-info-circle text-info me-1"></i>
+                                <strong>Notice:</strong> Server-side cleanup purges expired images from server storage. Downloaded offline files cannot be remotely deleted from recipient devices.
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <span class="text-secondary d-block mb-1">SHA-256 Checksum:</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="hash-pill flex-grow-1 overflow-auto">
+                                    {{ result.file_hash }}
+                                </div>
+                                <button class="btn btn-sm btn-cyber-outline btn-copy-clipboard" data-copy="{{ result.file_hash }}">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <span class="text-secondary d-block mb-1">Server HMAC-SHA256 Signature:</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="hash-pill flex-grow-1 overflow-auto text-purple" style="color: var(--purple-light);">
+                                    {{ result.hmac_signature }}
+                                </div>
+                                <button class="btn btn-sm btn-cyber-outline btn-copy-clipboard" data-copy="{{ result.hmac_signature }}">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature: Visual Steganalysis & Difference Heatmap Inspector -->
+                {% if result.steg_analysis %}
+                <div class="p-3 rounded text-start mb-4" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+                    <div class="d-flex align-items-center justify-content-between pb-2 mb-3 border-bottom border-secondary border-opacity-25 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-cpu text-cyan fs-5"></i>
+                            <span class="fw-bold text-white">Visual Steganalysis & Pixel Heatmap</span>
+                        </div>
+                        <span class="badge badge-cyber verified">
+                            <i class="bi bi-shield-check me-1"></i> {{ result.steg_analysis.psnr_eval }}
+                        </span>
+                    </div>
+
+                    <!-- 4 Forensic Metrics Badges -->
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                <div class="text-secondary small" style="font-size: 0.72rem;">PEAK SNR (PSNR)</div>
+                                <div class="fs-5 fw-bold text-cyan">{{ result.steg_analysis.psnr_str }}</div>
+                                <div class="text-muted" style="font-size: 0.68rem;">Higher = Less Distortion</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                <div class="text-secondary small" style="font-size: 0.72rem;">MEAN SQUARED ERROR</div>
+                                <div class="fs-5 fw-bold text-info">{{ result.steg_analysis.mse }}</div>
+                                <div class="text-muted" style="font-size: 0.68rem;">Channel variance</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                <div class="text-secondary small" style="font-size: 0.72rem;">ALTERED BITS</div>
+                                <div class="fs-5 fw-bold text-warning">{{ result.steg_analysis.changed_bits }}</div>
+                                <div class="text-muted" style="font-size: 0.68rem;">{{ result.steg_analysis.changed_bit_pct }}% of all bits</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded h-100" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);">
+                                <div class="text-secondary small" style="font-size: 0.72rem;">ALTERED PIXELS</div>
+                                <div class="fs-5 fw-bold text-purple" style="color: var(--purple-light);">{{ result.steg_analysis.changed_pixels }}</div>
+                                <div class="text-muted" style="font-size: 0.68rem;">{{ result.steg_analysis.changed_pixel_pct }}% of pixels</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Visualizer Tabs -->
+                    <ul class="nav nav-pills nav-fill mb-3" id="stegoVisualTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active small py-2" id="tab-heatmap-btn" data-bs-toggle="tab" data-bs-target="#tab-heatmap" type="button" role="tab">
+                                <i class="bi bi-fire text-danger me-1"></i> Amplified Difference Heatmap
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link small py-2" id="tab-stego-btn" data-bs-toggle="tab" data-bs-target="#tab-stego" type="button" role="tab">
+                                <i class="bi bi-image text-cyan me-1"></i> Stego Carrier Image
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link small py-2" id="tab-cover-btn" data-bs-toggle="tab" data-bs-target="#tab-cover" type="button" role="tab">
+                                <i class="bi bi-file-image text-secondary me-1"></i> Original Cover Image
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content text-center p-3 rounded" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);" id="stegoVisualTabContent">
+                        <div class="tab-pane fade show active" id="tab-heatmap" role="tabpanel">
+                            <img src="{{ result.steg_analysis.heatmap_b64 }}" class="img-fluid rounded border border-info border-opacity-25 shadow" style="max-height: 340px; object-fit: contain;" alt="Difference Heatmap">
+                            <div class="text-secondary small mt-2" style="font-size: 0.75rem;">
+                                <span class="badge bg-dark border border-info text-cyan me-2">Fluorescent Cyan Dots</span> = Amplified (255x) pixel deltas where encrypted LSBs are hidden. The human eye cannot detect these 1-bit shifts on the normal image.
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-stego" role="tabpanel">
+                            <img src="{{ result.steg_analysis.stego_b64 }}" class="img-fluid rounded border border-secondary border-opacity-25 shadow" style="max-height: 340px; object-fit: contain;" alt="Stego Image">
+                            <div class="text-secondary small mt-2" style="font-size: 0.75rem;">
+                                Generated Stego Carrier PNG. Visually 100% indistinguishable from the original cover file.
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-cover" role="tabpanel">
+                            <img src="{{ result.steg_analysis.cover_b64 }}" class="img-fluid rounded border border-secondary border-opacity-25 shadow" style="max-height: 340px; object-fit: contain;" alt="Original Cover">
+                            <div class="text-secondary small mt-2" style="font-size: 0.75rem;">
+                                Unmodified original cover image before LSB steganography.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Navigation buttons -->
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{{ url_for('covert_inbox') }}" class="btn btn-cyber-primary">
+                        <i class="bi bi-inbox-fill"></i> View in Secret Inbox
+                    </a>
+                    <a href="{{ url_for('extract_message') }}" class="btn btn-cyber-outline">
+                        <i class="bi bi-unlock"></i> Test Extraction
+                    </a>
+                    <a href="{{ url_for('compare_images') }}" class="btn btn-cyber-outline">
+                        <i class="bi bi-cpu"></i> Steganalysis Comparator
+                    </a>
+                    <a href="{{ url_for('qr_tools') }}" class="btn btn-cyber-outline">
+                        <i class="bi bi-qr-code"></i> Optical QR Tools
+                    </a>
+                    <a href="{{ url_for('hide_message') }}" class="btn btn-cyber-secondary">
+                        <i class="bi bi-arrow-repeat"></i> Conceal Another Message
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

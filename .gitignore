@@ -29,4 +29,8 @@ uploads/stego/*
 !uploads/stego/.gitkeep
 our_secret.db
 test_stego.png
+*.pptx
 ~$*
+presentation_slides.html
+generate_elite_presentation.py
+generate_presentation.py

@@ -15,7 +15,7 @@
                     <p class="text-secondary small mb-0">Sign in to your encrypted operational console</p>
                 </div>
                 <div class="cyber-card-body p-4">
-                    <form method="POST" action="{{ url_for('login') }}">
+                    <form method="POST" action="{{ url_for('login') }}" autocomplete="off">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
                         <div class="mb-3">
@@ -24,7 +24,7 @@
                                 <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
                                     <i class="bi bi-person"></i>
                                 </span>
-                                <input type="text" class="form-control" id="username" name="username" placeholder="agent_id or name@domain" required autofocus>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="agent_id or name@domain" autocomplete="off" required>
                             </div>
                         </div>
 
@@ -34,7 +34,7 @@
                                 <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary">
                                     <i class="bi bi-key"></i>
                                 </span>
-                                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••••••" required>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••••••" autocomplete="new-password" required>
                                 <button class="btn btn-cyber-secondary btn-toggle-password" type="button" data-target="password">
                                     <i class="bi bi-eye"></i>
                                 </button>
@@ -73,14 +73,36 @@
 
 {% block extra_js %}
 <script>
+// Force blank inputs on page load, neutralizing any browser saved credential autofill
+function clearAutofill() {
+    const userField = document.getElementById('username');
+    const passField = document.getElementById('password');
+    if (userField && !userField.dataset.userChosen) {
+        userField.value = '';
+    }
+    if (passField && !passField.dataset.userChosen) {
+        passField.value = '';
+    }
+}
+
+window.addEventListener('DOMContentLoaded', clearAutofill);
+window.addEventListener('load', function() {
+    clearAutofill();
+    setTimeout(clearAutofill, 80);
+    setTimeout(clearAutofill, 300);
+});
+
 function selectRole(role) {
     const userField = document.getElementById('username');
     const passField = document.getElementById('password');
     const note = document.getElementById('admin-pass-note');
 
+    if (userField) userField.dataset.userChosen = 'true';
+    if (passField) passField.dataset.userChosen = 'true';
+
     if (role === 'admin') {
         userField.value = 'admin';
-        passField.value = ''; // Password is NOT filled automatically for admin!
+        passField.value = ''; // Always BLANK for Admin - requires manual entry!
         passField.placeholder = 'Enter Admin master password';
         passField.focus();
         if (note) note.classList.remove('d-none');

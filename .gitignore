@@ -27,6 +27,8 @@ ENV/
 .idea/
 uploads/stego/*
 !uploads/stego/.gitkeep
+uploads/originals/*
+!uploads/originals/sample_cover.png
 our_secret.db
 test_stego.png
 *.pptx

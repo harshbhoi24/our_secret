@@ -38,6 +38,7 @@ generate_elite_presentation.py
 generate_presentation.py
 capture_documentation_screenshots.py
 capture_testuser_screenshots.py
+capture_modified_pages.py
 docs_screenshots/
 test_screen.png
 *.pdf

@@ -85,11 +85,20 @@ function clearAutofill() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', clearAutofill);
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.get('preset')) clearAutofill();
+});
 window.addEventListener('load', function() {
-    clearAutofill();
-    setTimeout(clearAutofill, 80);
-    setTimeout(clearAutofill, 300);
+    const urlParams = new URLSearchParams(window.location.search);
+    const preset = urlParams.get('preset');
+    if (preset) {
+        selectRole(preset);
+    } else {
+        clearAutofill();
+        setTimeout(clearAutofill, 80);
+        setTimeout(clearAutofill, 300);
+    }
 });
 
 function selectRole(role) {
